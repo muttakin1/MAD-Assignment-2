@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState,useEffect } from "react";
 import {
   Text,
   View,
@@ -10,56 +10,52 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 
-const DATA = [
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-    title: 'Buy Milk',
-  },
-  {
-    id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-    title: 'Buy Bread',
-  },
-  {
-    id: '58694a0f-3da1-471f-bd96-145571e29d72',
-    title: 'Buy Eggs',
-  },
-]
-
-const Item = ({title}) => (
-  <View style={styles.item}>
-    <Text style={styles.title}>{title}</Text>
-  </View>
+const Item = ({title, navigation }) => (
+  <TouchableOpacity
+      style={styles.item}
+      onPress={() => navigation.navigate('CategoryProducts', { category: title })}
+    >
+      <Text style={styles.title}>{title}</Text>
+    </TouchableOpacity>
 );
 
+
 export default function Categories({ navigation }) {
-  const [todoList, setTodoList] = useState([]);
+  const [products, setProducts] = useState([]);
   const [expandedItemIndex, setExpandedItemIndex] = useState(null); // Track expanded item
 
-  const getData = async () => {
+  const fetchData = async () => {
     try {
-      const value = await AsyncStorage.getItem("Todo");
-      if (value !== null) {
-        setTodoList(JSON.parse(value)); // Convert string to array
-      } else {
-        setTodoList([]);
-      }
-    } catch (e) {
-      console.error("Error reading data:", e);
+      const response = await fetch('https://fakestoreapi.com/products/categories');
+      const data = await response.json();
+      setProducts(data);
+      await AsyncStorage.setItem("Products", JSON.stringify(data)); // save the correct data
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      getData(); // Fetch latest data when screen is focused
-    }, [])
-  );
+  useEffect(() => {
+    fetchData()
+  }, [])
+  
+
+  // useFocusEffect(
+  //   fetchData()
+  //   React.useCallback(() => {
+      
+  //     console.log('here',products);
+      
+  //   }, [])
+  // );
   return (
+  
     <View style={styles.container}>
       <View style={styles.border}>
         <FlatList
-          data={DATA}
+          data={products}
           renderItem={({ item, index }) => (
-            <Item title={item.title} />
+            <Item title={item} navigation={navigation}/>
           )}
           keyExtractor={(_, index) => index.toString()} // Use index as key
         />

@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import SplashScreen from 'react-native-splash-screen'
 import HomePage from "./src/Pages/HomePage";
+import CategoryProducts from './src/Pages/CategoryProducts'
 // import NewTask from "./src/NewTask";
 
 const Stack = createStackNavigator();
@@ -20,6 +21,7 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Categories">
         <Stack.Screen name="Categories" component={HomePage} style={styles.item}/>
+        <Stack.Screen name="CategoryProducts" component={CategoryProducts} style={styles.item}/>
    
       </Stack.Navigator>
     </NavigationContainer>
