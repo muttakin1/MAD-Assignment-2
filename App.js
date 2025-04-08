@@ -1,20 +1,49 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, {useEffect} from "react";
+import { Text, View, StyleSheet, Button,Alert, FlatList, Platform } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import SplashScreen from 'react-native-splash-screen'
+import HomePage from "./src/Pages/HomePage";
+// import NewTask from "./src/NewTask";
 
-export default function App() {
+const Stack = createStackNavigator();
+
+const App = () => {
+
+  useEffect(() => {
+    if (SplashScreen) {
+      SplashScreen.hide();
+      }
+  }, [])
+  
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Categories">
+        <Stack.Screen name="Categories" component={HomePage} style={styles.item}/>
+   
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+    container: {
+      flex: 1,
+      backgroundColor: "#fff",
+    },
+    text: {
+      fontSize: 24,
+      fontWeight: "bold",
+    },
+     item: {
+      backgroundColor: '#1111',
+      padding: 20,
+      marginVertical: 8,
+      marginHorizontal: 16,
+    },
+    title: {
+      fontSize: 32,
+    },
+  });
+  
+export default App;
