@@ -40,13 +40,16 @@ export default function CategoryProducts({ route,navigation }) {
   }, []);
 
   const renderItem = ({ item }) => (
-    <View style={styles.productCard}>
+    <TouchableOpacity
+    style={styles.productCard}
+    onPress={() => navigation.navigate("ProductDetail", { id: item.id })}
+  >
       <Image source={{ uri: item.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productTitle}>{item.title}</Text>
         <Text style={styles.productPrice}>Price: ${item.price}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
