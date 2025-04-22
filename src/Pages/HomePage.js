@@ -40,14 +40,6 @@ export default function Categories({ navigation }) {
   }, [])
   
 
-  // useFocusEffect(
-  //   fetchData()
-  //   React.useCallback(() => {
-      
-  //     console.log('here',products);
-      
-  //   }, [])
-  // );
   return (
   
     <View style={styles.container}>

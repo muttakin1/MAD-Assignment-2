@@ -22,6 +22,7 @@ const App = () => {
       <Stack.Navigator initialRouteName="Categories">
         <Stack.Screen name="Categories" component={HomePage} style={styles.item}/>
         <Stack.Screen name="CategoryProducts" component={CategoryProducts} style={styles.item}/>
+        
    
       </Stack.Navigator>
     </NavigationContainer>

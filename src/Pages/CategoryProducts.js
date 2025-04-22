@@ -8,12 +8,13 @@ import {
   TextInput,
   ActivityIndicator,
   FlatList,
-  Image
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import FontAwesome from "@expo/vector-icons/FontAwesome6";
 
-export default function CategoryProducts({ route }) {
+export default function CategoryProducts({ route,navigation }) {
   const { category } = route.params;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,11 +38,14 @@ export default function CategoryProducts({ route }) {
   useEffect(() => {
     fetchCategoryProducts();
   }, []);
+
   const renderItem = ({ item }) => (
-    <View style={styles.productItem}>
+    <View style={styles.productCard}>
       <Image source={{ uri: item.image }} style={styles.productImage} />
-      <Text style={styles.productTitle}>{item.title}</Text>
-      <Text style={styles.productPrice}>${item.price}</Text>
+      <View style={styles.productInfo}>
+        <Text style={styles.productTitle}>{item.title}</Text>
+        <Text style={styles.productPrice}>Price: ${item.price}</Text>
+      </View>
     </View>
   );
 
@@ -55,12 +59,26 @@ export default function CategoryProducts({ route }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>{category.toUpperCase()}</Text>
       <FlatList
         data={products}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContent}
       />
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate("Categories")}
+        >
+          <FontAwesome
+            name="arrow-left"
+            size={18}
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.backButtonText}>Back</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -68,39 +86,72 @@ export default function CategoryProducts({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: "#f2f9ff",
   },
-  heading: {
-    fontSize: 24,
+  header: {
+    fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 16,
+    paddingVertical: 12,
+    backgroundColor: "#42a5f5",
+    color: "#fff",
+    borderBottomWidth: 2,
+    borderBottomColor: "#ddd",
   },
-  productItem: {
-    backgroundColor: "#f0f0f0",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+  listContent: {
+    padding: 10,
   },
-   productImage: {
+  productCard: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  productImage: {
     width: 60,
     height: 60,
-    borderRadius: 8,
+    borderRadius: 6,
     marginRight: 12,
   },
+  productInfo: {
+    flex: 1,
+  },
   productTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
+    marginBottom: 4,
   },
   productPrice: {
     fontSize: 14,
-    color: "green",
-    marginTop: 4,
+    color: "#2e7d32",
   },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
+  backButtonContainer: {
+    padding: 10,
     alignItems: "center",
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2196f3",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
