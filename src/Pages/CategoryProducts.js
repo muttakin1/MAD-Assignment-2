@@ -25,7 +25,6 @@ export default function CategoryProducts({ route,navigation }) {
         `https://fakestoreapi.com/products/category/${category}`
       );
       const data = await response.json();
-      console.log(data);
 
       setProducts(data);
     } catch (error) {
