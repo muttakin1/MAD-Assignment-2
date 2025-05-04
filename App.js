@@ -1,52 +1,34 @@
-import React, {useEffect} from "react";
-import { Text, View, StyleSheet, Button,Alert, FlatList, Platform } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import SplashScreen from 'react-native-splash-screen'
-import HomePage from "./src/Pages/HomePage";
-import CategoryProducts from './src/Pages/CategoryProducts'
-import Product from './src/Pages/ProductDetails'
 
-const Stack = createStackNavigator();
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-const App = () => {
+import Cart from "./src/Pages/Cart";
+import HomeStack from "./src/Components/HomeStack";
 
-  useEffect(() => {
-    if (SplashScreen) {
-      SplashScreen.hide();
-      }
-  }, [])
-  
+const Tab = createBottomTabNavigator();
+
+export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Categories">
-        <Stack.Screen name="Categories" component={HomePage} style={styles.item}/>
-        <Stack.Screen name="CategoryProducts" component={CategoryProducts} style={styles.item}/>
-        <Stack.Screen name="ProductDetail" component={Product} style={styles.item}/>
-   
-      </Stack.Navigator>
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false, // hides the header for tab screens
+        }}
+      >
+        <Tab.Screen name="Categories" component={HomeStack} />
+        <Tab.Screen name="Cart" component={Cart} />
+        {/* <Tab.Screen name="MyOrders" component={MyOrders} />
+        <Tab.Screen name="Profile" component={UserProfile} /> */}
+      </Tab.Navigator>
     </NavigationContainer>
   );
-};
+}
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#fff",
-    },
-    text: {
-      fontSize: 24,
-      fontWeight: "bold",
-    },
-     item: {
-      backgroundColor: '#1111',
-      padding: 20,
-      marginVertical: 8,
-      marginHorizontal: 16,
-    },
-    title: {
-      fontSize: 32,
-    },
-  });
-  
-export default App;
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+});
