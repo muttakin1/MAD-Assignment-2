@@ -13,11 +13,13 @@ import { FontAwesome } from "@expo/vector-icons";
 export default function Cart({ cartItems, setCartItems }) {
   const updateQuantity = (id, delta) => {
     setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
+      prevItems
+        .map((item) =>
+          item.id === id
+            ? { ...item, quantity: item.quantity + delta }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
     );
   };
 
@@ -56,19 +58,25 @@ export default function Cart({ cartItems, setCartItems }) {
         <Text style={styles.summaryText}>Total Price: ${totalPrice}</Text>
       </View>
 
+      {cartItems.length === 0 ? (
+        <Text style={styles.emptyText}>Your shopping cart is empty.</Text>
+      ):(
+
       <FlatList
         data={cartItems}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 80 }}
+        
       />
-
+    )}
       <TouchableOpacity
         style={styles.checkoutButton}
         onPress={() => Alert.alert("Checkout", "Proceeding to checkout...")}
       >
         <Text style={styles.checkoutText}>Check Out</Text>
       </TouchableOpacity>
+      
     </View>
   );
 }
@@ -78,6 +86,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f4f4f4",
     padding: 10,
+    paddingTop:60
   },
   header: {
     fontSize: 20,
@@ -150,5 +159,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  emptyText: {
+    fontSize: 30,
+    color: "gray",
+    textAlign: "center",
+    marginTop: 50,
   },
 });
