@@ -9,8 +9,13 @@ import {
   TouchableOpacity,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome6";
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../redux/cartSlice';
 
 export default function ProductDetail({ route, navigation, addToCart }) {
+
+  const dispatch = useDispatch();
+
   const { id } = route.params;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +60,7 @@ export default function ProductDetail({ route, navigation, addToCart }) {
         <TouchableOpacity
           style={styles.cartButton}
           onPress={() => {
-            addToCart(product);
+            dispatch(addToCart(product));
           }}
         >
           <FontAwesome name="cart-plus" size={16} color="#fff" />
