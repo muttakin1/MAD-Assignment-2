@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome6";
 
-export default function ProductDetail({ route, navigation }) {
+export default function ProductDetail({ route, navigation, addToCart }) {
   const { id } = route.params;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,11 +35,8 @@ export default function ProductDetail({ route, navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
       <Image source={{ uri: product.image }} style={styles.productImage} />
-
       <Text style={styles.title}>{product.title}</Text>
-
       <View style={styles.productInfoCard}>
         <Text style={styles.infoText}>Rate: {product.rating?.rate}</Text>
         <Text style={styles.infoText}>Count: {product.rating?.count}</Text>
@@ -55,7 +52,12 @@ export default function ProductDetail({ route, navigation }) {
           <Text style={styles.buttonText}> Back</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cartButton}>
+        <TouchableOpacity
+          style={styles.cartButton}
+          onPress={() => {
+            addToCart(product);
+          }}
+        >
           <FontAwesome name="cart-plus" size={16} color="#fff" />
           <Text style={styles.buttonText}> Add to Cart</Text>
         </TouchableOpacity>
@@ -68,7 +70,6 @@ export default function ProductDetail({ route, navigation }) {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  
+
   productImage: {
     width: 200,
     height: 200,

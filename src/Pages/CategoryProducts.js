@@ -70,7 +70,7 @@ export default function CategoryProducts({ route,navigation }) {
       <View style={styles.backButtonContainer}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate("Categories")}
+          onPress={() => navigation.navigate("Home")}
         >
           <FontAwesome
             name="arrow-left"
