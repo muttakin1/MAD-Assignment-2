@@ -10,9 +10,9 @@ import {
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome6";
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../redux/cartSlice';
+import { addToCart } from '../store/cartSlice';
 
-export default function ProductDetail({ route, navigation, addToCart }) {
+export default function ProductDetail({ route, navigation }) {
 
   const dispatch = useDispatch();
 

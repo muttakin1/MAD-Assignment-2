@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateQuantity } from "../redux/cartSlice";
+import { updateQuantity } from "../store/cartSlice";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 
 export default function Cart() {
-  const cartItems = useSelector((state) => state.cart.items);
+  const cartItems = useSelector((state) => state.cart);
+  
   const dispatch = useDispatch();
 
   const handleQuantityChange = (id, delta) => {
