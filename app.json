@@ -1,6 +1,5 @@
 {
   "expo": {
-    
     "name": "HelloMAD2025",
     "slug": "HelloMAD2025",
     "version": "1.0.0",
@@ -25,6 +24,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "react-native-bootsplash"
+    ]
   }
 }

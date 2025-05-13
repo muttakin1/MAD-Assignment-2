@@ -6,6 +6,8 @@ import store from "./src/store/store";
 
 import Cart from "./src/Pages/Cart";
 import HomeStack from "./src/Components/HomeStack";
+import Profile from "./src/Pages/Profile"
+import MyOrders from "./src/Pages/MyOrders"
 import { View, Text, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
@@ -35,11 +37,20 @@ function AppTabs() {
           } else if (route.name === "Home") {
             return <FontAwesome name="home" size={size} color={color} />;
           }
+          else if (route.name === "My Orders") {
+            return <FontAwesome name="gift" size={size} color={color} />;
+          }
+          else if (route.name === "Profile") {
+            return <FontAwesome name="user" size={size} color={color} />;
+          }
         },
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Cart" component={Cart} />
+      <Tab.Screen name="My Orders" component={MyOrders} />
+      <Tab.Screen name="Profile" component={Profile} />
+      
     </Tab.Navigator>
   );
 }

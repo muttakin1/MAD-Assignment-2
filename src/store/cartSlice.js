@@ -11,7 +11,8 @@ const cartSlice = createSlice({
       if (item) {
         item.quantity += 1;
       } else {
-        state.push({ ...action.payload, quantity: 1 });
+        state.push({ ...action.payload, quantity: 1, status: 'new' });
+
       }
     },
     updateQuantity: (state, action) => {
