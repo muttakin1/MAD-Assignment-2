@@ -4,10 +4,12 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Provider } from "react-redux";
 import store from "./src/store/store";
 
+
 import Cart from "./src/Pages/Cart";
 import HomeStack from "./src/Components/HomeStack";
-import Profile from "./src/Pages/Profile"
+import UserStack from "./src/Components/UserStack";
 import MyOrders from "./src/Pages/MyOrders"
+
 import { View, Text, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
@@ -40,7 +42,7 @@ function AppTabs() {
           else if (route.name === "My Orders") {
             return <FontAwesome name="gift" size={size} color={color} />;
           }
-          else if (route.name === "Profile") {
+          else if (route.name === "User Profile") {
             return <FontAwesome name="user" size={size} color={color} />;
           }
         },
@@ -49,7 +51,8 @@ function AppTabs() {
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Cart" component={Cart} />
       <Tab.Screen name="My Orders" component={MyOrders} />
-      <Tab.Screen name="Profile" component={Profile} />
+      <Tab.Screen name="User Profile" component={UserStack} />
+      
       
     </Tab.Navigator>
   );
