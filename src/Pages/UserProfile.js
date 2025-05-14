@@ -1,10 +1,12 @@
 // src/Pages/UserProfile.js
-import React from "react";
+import React, { useState,useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {checkAuthStatus} from '../api/Api'
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function UserProfile({ navigation }) {
-  const username = "tom";
-  const email = "test@test.com";
+export default function UserProfile(props) {
+  const username = props.route.params.name;
+  const email = props.route.params.email;
 
   return (
     <View style={styles.container}>
@@ -13,18 +15,22 @@ export default function UserProfile({ navigation }) {
       </TouchableOpacity>
 
       <Text style={styles.label}>
-        <Text style={styles.bold}>User Name: </Text>{username}
+        <Text style={styles.bold}>User Name: </Text>
+        {username}
       </Text>
       <Text style={styles.label}>
-        <Text style={styles.bold}>Email: </Text>{email}
+        <Text style={styles.bold}>Email: </Text>
+        {email}
       </Text>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity onPress={checkAuthStatus} style={styles.button}>
           <Text style={styles.buttonText}>Update</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button, { backgroundColor: "#0074cc" }]}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#0074cc" }]}
+        >
           <Text style={styles.buttonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>

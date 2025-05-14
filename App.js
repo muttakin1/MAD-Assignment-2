@@ -36,7 +36,7 @@ function AppTabs() {
                 )}
               </View>
             );
-          } else if (route.name === "Home") {
+          } else if (route.name === "HomeStack") {
             return <FontAwesome name="home" size={size} color={color} />;
           }
           else if (route.name === "My Orders") {
@@ -48,7 +48,7 @@ function AppTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} />
+      <Tab.Screen name="HomeStack" component={HomeStack} />
       <Tab.Screen name="Cart" component={Cart} />
       <Tab.Screen name="My Orders" component={MyOrders} />
       <Tab.Screen name="User Profile" component={UserStack} />

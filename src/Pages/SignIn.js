@@ -7,18 +7,30 @@ import {
   StyleSheet,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import {signin} from '../api/Api'
+import { signin } from "../api/Api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SignIn({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSignIn = async () => {
-    console.log("here");
-
-    const response= await signin(email,password)
-    console.log(response);
-    
+    const response = await signin(email, password);
+    if (response.token) {
+      await storeData("user", response);
+      navigation.navigate("UserProfile", {
+        name: response.name,
+        email: response.email,
+      });
+    }
+  };
+  const storeData = async (key, value) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem(key, jsonValue);
+    } catch (e) {
+      // saving error
+    }
   };
 
   const handleClear = () => {
