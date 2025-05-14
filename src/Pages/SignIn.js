@@ -7,19 +7,19 @@ import {
   StyleSheet,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import {signin} from '../api/Api'
 
 export default function SignIn({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignIn = () => {
-    if (email === "test@test.com" && password === "123456") {
-      navigation.navigate("UserProfile");
-    } else {
-      Alert.alert("Error", "Invalid credentials");
-    }
+  const handleSignIn = async () => {
+    console.log("here");
+
+    const response= await signin(email,password)
+    console.log(response);
+    
   };
-  
 
   const handleClear = () => {
     setEmail("");
@@ -74,63 +74,62 @@ export default function SignIn({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#fff",
-      justifyContent: "center",
-      padding: 20,
-    },
-    card: {
-      backgroundColor: "#5c6bc0",
-      borderRadius: 12,
-      padding: 20,
-    },
-    title: {
-      fontSize: 16,
-      fontWeight: "bold",
-      color: "white",
-      marginBottom: 20,
-    },
-    label: {
-      color: "white",
-      marginTop: 10,
-    },
-    input: {
-      backgroundColor: "#fff",
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      marginTop: 6,
-    },
-    buttonRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginTop: 20,
-    },
-    clearButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#1565c0",
-      padding: 10,
-      borderRadius: 20,
-    },
-    signInButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#0d47a1",
-      padding: 10,
-      borderRadius: 20,
-    },
-    buttonText: {
-      color: "white",
-      marginLeft: 6,
-      fontWeight: "bold",
-    },
-    switchText: {
-      marginTop: 20,
-      color: "white",
-      textAlign: "center",
-      textDecorationLine: "underline",
-    },
-  });
-  
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    padding: 20,
+  },
+  card: {
+    backgroundColor: "#5c6bc0",
+    borderRadius: 12,
+    padding: 20,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 20,
+  },
+  label: {
+    color: "white",
+    marginTop: 10,
+  },
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 6,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1565c0",
+    padding: 10,
+    borderRadius: 20,
+  },
+  signInButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0d47a1",
+    padding: 10,
+    borderRadius: 20,
+  },
+  buttonText: {
+    color: "white",
+    marginLeft: 6,
+    fontWeight: "bold",
+  },
+  switchText: {
+    marginTop: 20,
+    color: "white",
+    textAlign: "center",
+    textDecorationLine: "underline",
+  },
+});
