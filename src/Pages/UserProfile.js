@@ -1,12 +1,35 @@
 // src/Pages/UserProfile.js
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import {checkAuthStatus} from '../api/Api'
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { checkAuthStatus, signout } from "../api/Api";
+import { useDispatch } from "react-redux";
+import { CommonActions } from "@react-navigation/native";
 
-export default function UserProfile(props) {
-  const username = props.route.params.name;
-  const email = props.route.params.email;
+export default function UserProfile({ route, navigation }) {
+  const dispatch = useDispatch();
+  const [user, setUser] = useState(null);
+
+  const username = route.params?.name || user?.name;
+  const email = route.params?.email || user?.email;
+
+  useEffect(() => {
+    const fetchAuthStatus = async () => {
+      const response = await checkAuthStatus();
+      setUser(response);
+    };
+
+    fetchAuthStatus();
+  }, []);
+
+  const handleSignout = async () => {
+    await signout(dispatch);
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "SignIn" }],
+      })
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -16,11 +39,11 @@ export default function UserProfile(props) {
 
       <Text style={styles.label}>
         <Text style={styles.bold}>User Name: </Text>
-        {username}
+        {username || "Not available"}
       </Text>
       <Text style={styles.label}>
         <Text style={styles.bold}>Email: </Text>
-        {email}
+        {email || "Not available"}
       </Text>
 
       <View style={styles.buttonContainer}>
@@ -29,6 +52,7 @@ export default function UserProfile(props) {
         </TouchableOpacity>
 
         <TouchableOpacity
+          onPress={handleSignout}
           style={[styles.button, { backgroundColor: "#0074cc" }]}
         >
           <Text style={styles.buttonText}>Sign Out</Text>

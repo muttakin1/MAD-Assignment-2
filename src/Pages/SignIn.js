@@ -9,21 +9,25 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { signin } from "../api/Api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
 
 export default function SignIn({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const dispatch = useDispatch();
+
   const handleSignIn = async () => {
-    const response = await signin(email, password);
-    if (response.token) {
-      await storeData("user", response);
-      navigation.navigate("UserProfile", {
-        name: response.name,
-        email: response.email,
-      });
+    const result = await signin(email, password, dispatch);
+    console.log(result);
+
+    if (result?.token) {
+      navigation.navigate("UserProfile");
+    } else {
+      alert("Login failed");
     }
   };
+
   const storeData = async (key, value) => {
     try {
       const jsonValue = JSON.stringify(value);
