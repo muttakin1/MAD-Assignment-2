@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { login,logout } from "../store/authSlice";
-const URL = "http://192.168.0.166:3000";
+import { login, logout } from "../store/authSlice";
+const URL = "http://192.168.86.211:3000";
 
 const signin = async (email, password, dispatch) => {
-  
   const response = await fetch(`${URL}/users/signin`, {
     method: "POST",
     headers: {
@@ -17,11 +16,11 @@ const signin = async (email, password, dispatch) => {
 
   if (result.token) {
     await AsyncStorage.setItem("user", JSON.stringify(result));
-    dispatch(login(result)); 
+    dispatch(login(result));
   }
 
   return result;
-}
+};
 
 const signout = async (dispatch) => {
   try {
@@ -42,15 +41,29 @@ const checkAuthStatus = async () => {
   }
 };
 
-
 const getData = async (key) => {
-   try {
+  try {
     const jsonValue = await AsyncStorage.getItem(key);
     return jsonValue != null ? JSON.parse(jsonValue) : null;
   } catch (e) {
     console.log(e);
-    
   }
 };
 
-export { signin, checkAuthStatus ,getData, signout };
+const getOrderByUser = async (token) => {
+  try {
+    const response = await fetch(`${URL}/orders/all`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return await response.json()
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export { signin, checkAuthStatus, getData, signout,getOrderByUser };

@@ -22,6 +22,12 @@ function AppTabs() {
   const cartItems = useSelector((state) => state.cart);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  const orders = useSelector((state) => state.orders);
+  const newOrderCount = orders
+    .flat()
+    .filter((item) => item.status === "new")
+    .reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -41,6 +47,11 @@ function AppTabs() {
               {route.name === "Cart" && totalItems > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{totalItems}</Text>
+                </View>
+              )}
+              {route.name === "My Orders" && newOrderCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{newOrderCount}</Text>
                 </View>
               )}
             </View>

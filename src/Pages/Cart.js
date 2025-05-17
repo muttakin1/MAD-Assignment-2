@@ -1,6 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateQuantity } from "../store/cartSlice";
+import { updateQuantity, checkoutCart,clearCart } from "../store/cartSlice";
+import { addOrder } from "../store/orderSlice";
 import {
   View,
   Text,
@@ -14,11 +15,24 @@ import { FontAwesome } from "@expo/vector-icons";
 
 export default function Cart() {
   const cartItems = useSelector((state) => state.cart);
-  
+
   const dispatch = useDispatch();
 
   const handleQuantityChange = (id, delta) => {
     dispatch(updateQuantity({ id, delta }));
+  };
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+
+    const finalizedOrder = cartItems.map((item) => ({
+      ...item,
+      status: "new",
+    }));
+
+    dispatch(addOrder(finalizedOrder)); // store the order
+    dispatch(clearCart()); // clear the cart
+
+    Alert.alert("Order Placed", "Your order has been placed successfully.");
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -30,7 +44,9 @@ export default function Cart() {
     <View style={styles.card}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.details}>
-        <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {item.title}
+        </Text>
         <Text style={styles.price}>Price: ${item.price}</Text>
         <View style={styles.quantityRow}>
           <TouchableOpacity onPress={() => handleQuantityChange(item.id, -1)}>
@@ -62,10 +78,7 @@ export default function Cart() {
           contentContainerStyle={{ paddingBottom: 80 }}
         />
       )}
-      <TouchableOpacity
-        style={styles.checkoutButton}
-        onPress={() => Alert.alert("Checkout", "Proceeding to checkout...")}
-      >
+      <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
         <Text style={styles.checkoutText}>Check Out</Text>
       </TouchableOpacity>
     </View>
@@ -155,7 +168,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.50,
+    shadowOpacity: 0.5,
     shadowRadius: 2,
   },
   summaryText: {

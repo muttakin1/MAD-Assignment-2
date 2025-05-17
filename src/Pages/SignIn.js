@@ -19,7 +19,7 @@ export default function SignIn({ navigation }) {
 
   const handleSignIn = async () => {
     const result = await signin(email, password, dispatch);
-    console.log(result);
+
 
     if (result?.token) {
       navigation.navigate("UserProfile");
