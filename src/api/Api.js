@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { login, logout } from "../store/authSlice";
-const URL = "http://192.168.86.211:3000";
+const URL = "http://192.168.0.166:3000";
 
 const signin = async (email, password, dispatch) => {
   const response = await fetch(`${URL}/users/signin`, {
@@ -66,4 +66,42 @@ const getOrderByUser = async (token) => {
   }
 };
 
-export { signin, checkAuthStatus, getData, signout,getOrderByUser };
+const newOrder = async (token,order) => {
+  
+  try {
+    const response = await fetch(`${URL}/orders/neworder`, {
+      method: "Post",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+       body: JSON.stringify(order),
+    });
+    
+    return await response.json()
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const syncCartItem = async (token,product) => {
+
+  try {
+    const response = await fetch(`${URL}/cart`, {
+      method: "Put",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+       body: JSON.stringify(product),
+    });
+    
+    return await response.json()
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export { signin, checkAuthStatus, getData, signout,getOrderByUser,newOrder,syncCartItem };

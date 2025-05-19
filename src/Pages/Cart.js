@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateQuantity, checkoutCart,clearCart } from "../store/cartSlice";
+import { updateQuantity, checkoutCart, clearCart } from "../store/cartSlice";
 import { addOrder } from "../store/orderSlice";
 import {
   View,
@@ -12,6 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { checkAuthStatus, newOrder } from "../api/Api";
 
 export default function Cart() {
   const cartItems = useSelector((state) => state.cart);
@@ -21,18 +22,37 @@ export default function Cart() {
   const handleQuantityChange = (id, delta) => {
     dispatch(updateQuantity({ id, delta }));
   };
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) return;
 
-    const finalizedOrder = cartItems.map((item) => ({
-      ...item,
-      status: "new",
-    }));
+    try {
+      const user = await checkAuthStatus();
+      const token = user?.token;
+      if (!token) {
+        Alert.alert("Error", "You must be logged in to place an order.");
+        return;
+      }
 
-    dispatch(addOrder(finalizedOrder)); // store the order
-    dispatch(clearCart()); // clear the cart
+      const orderPayload = {
+        items: cartItems.map((item) => ({
+          prodID: item.id, // or item.id if prodID is not available
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      };
 
-    Alert.alert("Order Placed", "Your order has been placed successfully.");
+      const response = await newOrder(token, orderPayload);
+
+      if (response.status=='OK') {
+        dispatch(clearCart());
+        Alert.alert("Order Placed", "Your order has been placed successfully.");
+      } else {
+        Alert.alert("Order Failed", "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      Alert.alert("Error", "Failed to place order. Please try again later.");
+    }
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);

@@ -9,12 +9,40 @@ import {
   TouchableOpacity,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome6";
-import { useDispatch } from 'react-redux';
-import { addToCart } from '../store/cartSlice';
+import { useDispatch } from "react-redux";
+import { addToCart } from "../store/cartSlice";
+import { syncCartItem,checkAuthStatus } from '../api/Api';
+
 
 export default function ProductDetail({ route, navigation }) {
-
   const dispatch = useDispatch();
+
+  const handleAddToCart = async () => {
+  dispatch(addToCart(product)); 
+
+  const user = await checkAuthStatus(); 
+  const token = user?.token;
+
+  if (!token) {
+    console.warn("User not logged in, cannot sync with backend");
+    return;
+  }
+
+  const cart = store.getState().cart; 
+  const cartItem = cart.find((item) => item.id === product.id);
+
+  const payload = {
+    items: [
+      {
+        id: product.id,
+        price: product.price,
+        count: cartItem ? cartItem.quantity : 1, 
+      },
+    ],
+  };
+
+  await syncCartItem(token, payload);
+};
 
   const { id } = route.params;
   const [product, setProduct] = useState(null);
@@ -57,12 +85,7 @@ export default function ProductDetail({ route, navigation }) {
           <Text style={styles.buttonText}> Back</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.cartButton}
-          onPress={() => {
-            dispatch(addToCart(product));
-          }}
-        >
+        <TouchableOpacity style={styles.cartButton} onPress={handleAddToCart}>
           <FontAwesome name="cart-plus" size={16} color="#fff" />
           <Text style={styles.buttonText}> Add to Cart</Text>
         </TouchableOpacity>
