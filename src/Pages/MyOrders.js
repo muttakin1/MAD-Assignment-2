@@ -1,8 +1,5 @@
-import React, { useState,useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { updateQuantity } from "../store/cartSlice";
-import { markAllAsPaid, markAllAsDelivered } from "../store/orderSlice";
-import { checkAuthStatus,getOrderByUser } from "../api/Api";
+import React, { useState, useEffect, useCallback } from "react";
+import { useDispatch } from "react-redux";
 import {
   View,
   Text,
@@ -13,7 +10,8 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-
+import { checkAuthStatus, getOrderByUser } from "../api/Api";
+import { markAllAsPaid, markAllAsDelivered } from "../store/orderSlice";
 
 const STATUS_LABELS = {
   new: "New Orders",
@@ -22,38 +20,59 @@ const STATUS_LABELS = {
 };
 
 export default function MyOrders() {
-  const orders = useSelector((state) => state.orders);
   const dispatch = useDispatch();
 
-  const [allOrders,setAllOrders]=useState()
+  const [groupedItems, setGroupedItems] = useState({
+    new: [],
+    paid: [],
+    delivered: [],
+  });
+
   const [expanded, setExpanded] = useState({
     new: true,
     paid: false,
     delivered: false,
   });
 
-   useFocusEffect(()  => {
-    
-    const getOrders= async()=>{
-      const user = await checkAuthStatus()
-      const response=await getOrderByUser(user.token)
-      setAllOrders(response)
-    }
-    getOrders()
+  const fetchOrders = async () => {
+    const user = await checkAuthStatus();
+    const response = await getOrderByUser(user.token);
+    const orders = response.orders;
 
-  }, [])
-  
-  const allItems = Array.isArray(orders[0]) ? orders.flat() : orders;
+    // Flatten the structure and convert to UI-ready items
+    const allItems = orders.flatMap((order) => {
+      const status = order.is_delivered
+        ? "delivered"
+        : order.is_paid
+        ? "paid"
+        : "new";
+      const items = JSON.parse(order.order_items);
+      return items.map((item, index) => ({
+        id: `${order.id}-${item.prodID}-${index}`, // unique key
+        orderId: order.id,
+        prodID: item.prodID,
+        price: item.price,
+        quantity: item.quantity,
+        status,
+        title: `Product #${item.prodID}`,
+      }));
+    });
 
-  const groupedItems = {
-    new: allItems.filter((item) => item.status === "new"),
-    paid: allItems.filter((item) => item.status === "paid"),
-    delivered: allItems.filter((item) => item.status === "delivered"),
+    setGroupedItems({
+      new: allItems.filter((i) => i.status === "new"),
+      paid: allItems.filter((i) => i.status === "paid"),
+      delivered: allItems.filter((i) => i.status === "delivered"),
+    });
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();
+    }, [])
+  );
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.details}>
         <Text style={styles.title} numberOfLines={2}>
           {item.title}
@@ -69,9 +88,7 @@ export default function MyOrders() {
   const renderGroup = (status) => {
     const items = groupedItems[status];
     const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-    const total = items
-      .reduce((sum, i) => sum + i.price * i.quantity, 0)
-      .toFixed(2);
+    const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0).toFixed(2);
 
     return (
       <View style={styles.group} key={status}>
@@ -100,7 +117,6 @@ export default function MyOrders() {
             data={items}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
-            extraData={orders}
           />
         )}
 
@@ -110,6 +126,7 @@ export default function MyOrders() {
             onPress={() => {
               dispatch(markAllAsPaid());
               setExpanded((prev) => ({ ...prev, paid: true }));
+              fetchOrders(); // refresh list
             }}
           >
             <Text style={styles.payButtonText}>Mark All as Paid</Text>
@@ -118,8 +135,10 @@ export default function MyOrders() {
         {status === "paid" && items.length > 0 && (
           <TouchableOpacity
             style={styles.payButton}
-            onPress={() =>{ dispatch(markAllAsDelivered())
-               setExpanded((prev) => ({ ...prev, paid: false,delivered:true }))
+            onPress={() => {
+              dispatch(markAllAsDelivered());
+              setExpanded((prev) => ({ ...prev, paid: false, delivered: true }));
+              fetchOrders(); // refresh list
             }}
           >
             <Text style={styles.payButtonText}>Mark All as Delivered</Text>
@@ -190,6 +209,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
+    marginTop: 8,
+    alignSelf: "flex-start",
   },
   payButtonText: {
     color: "white",
@@ -202,13 +223,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 6,
     padding: 10,
-  },
-  image: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    marginRight: 10,
-    resizeMode: "contain",
   },
   details: {
     flex: 1,
@@ -226,23 +240,10 @@ const styles = StyleSheet.create({
   quantityRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
     marginTop: 4,
   },
   quantityText: {
     fontSize: 14,
     marginHorizontal: 10,
-  },
-  deliverButton: {
-    marginLeft: 10,
-    backgroundColor: "#2196f3", // blue color, or any color you want
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  deliverButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 14,
   },
 });

@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "HelloMAD2025",
-    "slug": "HelloMAD2025",
+    "name": "Fake-store",
+    "slug": "Fake-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon1.png",
+      "image": "./assets/splashscreen.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -26,7 +26,19 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "react-native-bootsplash"
+     [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#232323",
+          "image": "./assets/splashscreen.png",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 200
+        }
+      ]
+      
     ]
   }
 }

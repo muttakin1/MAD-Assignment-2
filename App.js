@@ -15,6 +15,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 
+
 const Tab = createBottomTabNavigator();
 
 function AppTabs() {
