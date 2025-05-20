@@ -60,14 +60,13 @@ const getOrderByUser = async (token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return await response.json()
+    return await response.json();
   } catch (error) {
     console.log(error);
   }
 };
 
-const newOrder = async (token,order) => {
-  
+const newOrder = async (token, order) => {
   try {
     const response = await fetch(`${URL}/orders/neworder`, {
       method: "Post",
@@ -76,17 +75,53 @@ const newOrder = async (token,order) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-       body: JSON.stringify(order),
+      body: JSON.stringify(order),
     });
-    
-    return await response.json()
+
+    return await response.json();
   } catch (error) {
     console.log(error);
   }
 };
 
-const syncCartItem = async (token,product) => {
+const updateOrder = async (token, order) => {
+  console.log(order);
+  
+  try {
+    const response = await fetch(`${URL}/orders/updateorder`, {
+      method: "Post",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(order),
+    });
 
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getCartItems = async (token, product) => {
+  try {
+    const response = await fetch(`${URL}/cart`, {
+      method: "Get",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const syncCartItem = async (token, product) => {
   try {
     const response = await fetch(`${URL}/cart`, {
       method: "Put",
@@ -95,13 +130,23 @@ const syncCartItem = async (token,product) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-       body: JSON.stringify(product),
+      body: JSON.stringify(product),
     });
-    
-    return await response.json()
+
+    return await response.json();
   } catch (error) {
     console.log(error);
   }
 };
 
-export { signin, checkAuthStatus, getData, signout,getOrderByUser,newOrder,syncCartItem };
+export {
+  signin,
+  checkAuthStatus,
+  getData,
+  signout,
+  getOrderByUser,
+  newOrder,
+  updateOrder,
+  getCartItems,
+  syncCartItem,
+};

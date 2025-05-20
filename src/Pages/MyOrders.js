@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { checkAuthStatus, getOrderByUser } from "../api/Api";
+import { checkAuthStatus, getOrderByUser, updateOrder } from "../api/Api";
 import { markAllAsPaid, markAllAsDelivered } from "../store/orderSlice";
 
 const STATUS_LABELS = {
@@ -21,6 +21,42 @@ const STATUS_LABELS = {
 
 export default function MyOrders() {
   const dispatch = useDispatch();
+
+  const handleMarkAllAsPaid = async () => {
+    const user = await checkAuthStatus();
+
+    const newOrders = groupedItems.new;
+    console.log(newOrders);
+    await Promise.all(
+      newOrders.map((item) =>
+        updateOrder(user.token, {
+          orderID: item.orderId,
+          isPaid: 1,
+          isDelivered: 0,
+        })
+      )
+    );
+    dispatch(markAllAsPaid());
+    setExpanded((prev) => ({ ...prev, paid: true,}));
+    fetchOrders();
+  };
+  const handleMarkAllDelivered = async () => {
+    const user = await checkAuthStatus();
+    const paidOrders = groupedItems.paid;
+
+    await Promise.all(
+      paidOrders.map((item) =>
+        updateOrder(user.token, {
+          orderID: item.orderId,
+          isPaid: 0,
+          isDelivered: 1,
+        })
+      )
+    );
+    dispatch(markAllAsDelivered());
+    setExpanded((prev) => ({ ...prev, paid: false, delivered: true }));
+    fetchOrders();
+  };
 
   const [groupedItems, setGroupedItems] = useState({
     new: [],
@@ -44,8 +80,8 @@ export default function MyOrders() {
       const status = order.is_delivered
         ? "delivered"
         : order.is_paid
-        ? "paid"
-        : "new";
+          ? "paid"
+          : "new";
       const items = JSON.parse(order.order_items);
       return items.map((item, index) => ({
         id: `${order.id}-${item.prodID}-${index}`, // unique key
@@ -88,7 +124,9 @@ export default function MyOrders() {
   const renderGroup = (status) => {
     const items = groupedItems[status];
     const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-    const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0).toFixed(2);
+    const total = items
+      .reduce((sum, i) => sum + i.price * i.quantity, 0)
+      .toFixed(2);
 
     return (
       <View style={styles.group} key={status}>
@@ -123,11 +161,7 @@ export default function MyOrders() {
         {status === "new" && items.length > 0 && (
           <TouchableOpacity
             style={styles.payButton}
-            onPress={() => {
-              dispatch(markAllAsPaid());
-              setExpanded((prev) => ({ ...prev, paid: true }));
-              fetchOrders(); // refresh list
-            }}
+            onPress={handleMarkAllAsPaid}
           >
             <Text style={styles.payButtonText}>Mark All as Paid</Text>
           </TouchableOpacity>
@@ -135,11 +169,7 @@ export default function MyOrders() {
         {status === "paid" && items.length > 0 && (
           <TouchableOpacity
             style={styles.payButton}
-            onPress={() => {
-              dispatch(markAllAsDelivered());
-              setExpanded((prev) => ({ ...prev, paid: false, delivered: true }));
-              fetchOrders(); // refresh list
-            }}
+            onPress={handleMarkAllDelivered}
           >
             <Text style={styles.payButtonText}>Mark All as Delivered</Text>
           </TouchableOpacity>

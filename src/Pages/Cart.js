@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateQuantity, checkoutCart, clearCart } from "../store/cartSlice";
+import { updateQuantity, setCart, clearCart } from "../store/cartSlice";
 import { addOrder } from "../store/orderSlice";
 import {
   View,
@@ -12,15 +12,65 @@ import {
   Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { checkAuthStatus, newOrder } from "../api/Api";
+import {
+  checkAuthStatus,
+  newOrder,
+  getCartItems,
+  syncCartItem,
+} from "../api/Api";
 
 export default function Cart() {
   const cartItems = useSelector((state) => state.cart);
 
   const dispatch = useDispatch();
 
-  const handleQuantityChange = (id, delta) => {
-    dispatch(updateQuantity({ id, delta }));
+  useEffect(() => {
+    const loadCartFromBackend = async () => {
+      const user = await checkAuthStatus();
+      console.log(user);
+
+      const token = user?.token;
+
+      if (!token) return;
+
+      const backendCart = await getCartItems(token);
+
+      if (backendCart?.items) {
+        // Map backend format to Redux cart format
+        const transformedCart = backendCart.items.map((item) => ({
+          id: item.id,
+          price: item.price,
+          quantity: item.quantity,
+          title: item.title || "", // fallback in case title/image not included
+          image: item.image || "", // optional
+        }));
+
+        dispatch(setCart(transformedCart));
+      }
+    };
+
+    loadCartFromBackend();
+  }, []);
+
+  const handleQuantityChange = async (id, delta) => {
+    const item = cartItems.find((i) => i.id === id);
+    if (!item) return;
+
+    const newQuantity = item.quantity + delta;
+
+    try {
+      const user = await checkAuthStatus();
+      const token = user?.token;
+      if (!token) return;
+
+      const result = await syncCartItem(token, {
+        items: [{ prodID: id, price: item.price, quantity: newQuantity }],
+      });
+
+      dispatch(updateQuantity({ id, delta }));
+    } catch (error) {
+      console.error("Failed to sync quantity with backend:", error);
+    }
   };
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
@@ -35,7 +85,7 @@ export default function Cart() {
 
       const orderPayload = {
         items: cartItems.map((item) => ({
-          prodID: item.id, // or item.id if prodID is not available
+          prodID: item.id, 
           price: item.price,
           quantity: item.quantity,
         })),
@@ -43,8 +93,9 @@ export default function Cart() {
 
       const response = await newOrder(token, orderPayload);
 
-      if (response.status=='OK') {
+      if (response.status == "OK") {
         dispatch(clearCart());
+        await syncCartItem(token, { items: [] });
         Alert.alert("Order Placed", "Your order has been placed successfully.");
       } else {
         Alert.alert("Order Failed", "Something went wrong. Please try again.");
@@ -93,7 +144,9 @@ export default function Cart() {
       ) : (
         <FlatList
           data={cartItems}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) =>
+            item.id ? item.id.toString() : index.toString()
+          }
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 80 }}
         />
