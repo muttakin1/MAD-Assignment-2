@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { checkAuthStatus, signout } from "../api/Api";
 import { useDispatch } from "react-redux";
-import { CommonActions } from "@react-navigation/native";
+import { CommonActions,useFocusEffect } from "@react-navigation/native";
 
 export default function UserProfile({ route, navigation }) {
   const dispatch = useDispatch();
@@ -12,14 +12,16 @@ export default function UserProfile({ route, navigation }) {
   const username = route.params?.name || user?.name;
   const email = route.params?.email || user?.email;
 
-  useEffect(() => {
+ useFocusEffect(
+  React.useCallback(() => {
     const fetchAuthStatus = async () => {
       const response = await checkAuthStatus();
       setUser(response);
     };
 
     fetchAuthStatus();
-  }, []);
+  }, []) 
+);
 
   const handleSignout = async () => {
     await signout(dispatch);
@@ -30,6 +32,10 @@ export default function UserProfile({ route, navigation }) {
       })
     );
   };
+
+  const handleUpdateProfile = ()=>{
+    navigation.navigate("UpdateProfile")
+  }
 
   return (
     <View style={styles.container}>
@@ -47,7 +53,7 @@ export default function UserProfile({ route, navigation }) {
       </Text>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={checkAuthStatus} style={styles.button}>
+        <TouchableOpacity onPress={handleUpdateProfile} style={styles.button}>
           <Text style={styles.buttonText}>Update</Text>
         </TouchableOpacity>
 

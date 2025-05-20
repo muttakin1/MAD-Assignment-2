@@ -8,25 +8,25 @@ import {
   Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { signUp } from "../api/Api";
+import { updateUser,checkAuthStatus } from "../api/Api";
 
 export default function Profile() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
 
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
-    if (!name || !email || !password) {
+    if (!name || !password) {
       Alert.alert("Error", "All fields are required.");
       return;
     }
 
     try {
       setLoading(true);
-      const body = { name, password, email };
-      const response = await signUp(body);
+      const user = await checkAuthStatus()
+      const body = { name, password };
+      const response = await updateUser(user.token,body);
    
       
       if (response.status=="OK") {
@@ -45,7 +45,6 @@ export default function Profile() {
   const handleCancel = () => {
     setName("");
     setPassword("");
-    setEmail("");
   };
 
   return (
@@ -59,16 +58,6 @@ export default function Profile() {
           value={name}
           onChangeText={setName}
           placeholder="Enter new name"
-        />
-
-        <Text style={styles.label}>New Email</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Enter new email"
-          keyboardType="email-address"
-          autoCapitalize="none"
         />
 
         <Text style={styles.label}>New Password</Text>

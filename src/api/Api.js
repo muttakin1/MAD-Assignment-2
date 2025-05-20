@@ -2,6 +2,27 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { login, logout } from "../store/authSlice";
 const URL = "http://192.168.0.166:3000";
 
+const signUp = async (body) => {
+  
+  try {
+    const response = await fetch(`${URL}/users/signup`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const result = await response.json();
+
+    return result;
+  } catch (error) {
+    console.error("Signup error:", error);
+    return { success: false, message: "Network or server error." };
+  }
+};
+
 const signin = async (email, password, dispatch) => {
   const response = await fetch(`${URL}/users/signin`, {
     method: "POST",
@@ -28,6 +49,24 @@ const signout = async (dispatch) => {
     dispatch(logout());
   } catch (e) {
     console.error("Error signing out", e);
+  }
+};
+
+const updateUser = async (token, order) => {
+  try {
+    const response = await fetch(`${URL}/users/update`, {
+      method: "Post",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(order),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -142,6 +181,7 @@ const syncCartItem = async (token, product) => {
 export {
   signin,
   checkAuthStatus,
+  updateUser,
   getData,
   signout,
   getOrderByUser,
@@ -149,4 +189,5 @@ export {
   updateOrder,
   getCartItems,
   syncCartItem,
+  signUp
 };
