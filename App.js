@@ -14,11 +14,12 @@ import MyOrders from "./src/Pages/MyOrders";
 import { View, Text, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
-
+import useSyncCart from "./src/Components/SyncCart";
 
 const Tab = createBottomTabNavigator();
 
 function AppTabs() {
+  useSyncCart();
   const navigation = useNavigation();
   const cartItems = useSelector((state) => state.cart);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);

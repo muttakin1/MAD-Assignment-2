@@ -52,6 +52,50 @@ export default function Cart() {
     loadCartFromBackend();
   }, []);
 
+  useEffect(() => {
+    const loadCartFromBackend = async () => {
+      const user = await checkAuthStatus();
+      const token = user?.token;
+      if (!token) return;
+
+      const backendCart = await getCartItems(token);
+      const items = backendCart?.items || [];
+
+      // Fetch product details for each item in parallel
+      const detailedItems = await Promise.all(
+        items.map(async (item) => {
+          try {
+            const response = await fetch(
+              `https://fakestoreapi.com/products/${item.id}`
+            );
+            const product = await response.json();
+
+            return {
+              id: item.id,
+              price: item.price,
+              quantity: item.quantity,
+              title: product.title || "No Title",
+              image: product.image || "",
+            };
+          } catch (error) {
+            console.warn("Failed to fetch product info for ID:", item.id);
+            return {
+              id: item.id,
+              price: item.price,
+              quantity: item.quantity,
+              title: "Unknown Product",
+              image: "",
+            };
+          }
+        })
+      );
+
+      dispatch(setCart(detailedItems));
+    };
+
+    loadCartFromBackend();
+  }, []);
+
   const handleQuantityChange = async (id, delta) => {
     const item = cartItems.find((i) => i.id === id);
     if (!item) return;
@@ -85,7 +129,7 @@ export default function Cart() {
 
       const orderPayload = {
         items: cartItems.map((item) => ({
-          prodID: item.id, 
+          prodID: item.id,
           price: item.price,
           quantity: item.quantity,
         })),

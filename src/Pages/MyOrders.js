@@ -5,9 +5,10 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Image,
   TouchableOpacity,
+  Image,
 } from "react-native";
+import { ScrollView } from "react-native-virtualized-view";
 import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { checkAuthStatus, getOrderByUser, updateOrder } from "../api/Api";
@@ -21,44 +22,7 @@ const STATUS_LABELS = {
 
 export default function MyOrders() {
   const dispatch = useDispatch();
-
-  const handleMarkAllAsPaid = async () => {
-    const user = await checkAuthStatus();
-
-    const newOrders = groupedItems.new;
-    console.log(newOrders);
-    await Promise.all(
-      newOrders.map((item) =>
-        updateOrder(user.token, {
-          orderID: item.orderId,
-          isPaid: 1,
-          isDelivered: 0,
-        })
-      )
-    );
-    dispatch(markAllAsPaid());
-    setExpanded((prev) => ({ ...prev, paid: true,}));
-    fetchOrders();
-  };
-  const handleMarkAllDelivered = async () => {
-    const user = await checkAuthStatus();
-    const paidOrders = groupedItems.paid;
-
-    await Promise.all(
-      paidOrders.map((item) =>
-        updateOrder(user.token, {
-          orderID: item.orderId,
-          isPaid: 0,
-          isDelivered: 1,
-        })
-      )
-    );
-    dispatch(markAllAsDelivered());
-    setExpanded((prev) => ({ ...prev, paid: false, delivered: true }));
-    fetchOrders();
-  };
-
-  const [groupedItems, setGroupedItems] = useState({
+  const [groupedOrders, setGroupedOrders] = useState({
     new: [],
     paid: [],
     delivered: [],
@@ -70,35 +34,32 @@ export default function MyOrders() {
     delivered: false,
   });
 
+  const [orderExpanded, setOrderExpanded] = useState({});
+  const [orderDetails, setOrderDetails] = useState({});
+
   const fetchOrders = async () => {
     const user = await checkAuthStatus();
     const response = await getOrderByUser(user.token);
-    const orders = response.orders;
+    const orders = response.orders || [];
 
-    // Flatten the structure and convert to UI-ready items
-    const allItems = orders.flatMap((order) => {
+    const grouped = { new: [], paid: [], delivered: [] };
+
+    orders.forEach((order) => {
       const status = order.is_delivered
         ? "delivered"
         : order.is_paid
           ? "paid"
           : "new";
+
       const items = JSON.parse(order.order_items);
-      return items.map((item, index) => ({
-        id: `${order.id}-${item.prodID}-${index}`, // unique key
-        orderId: order.id,
-        prodID: item.prodID,
-        price: item.price,
-        quantity: item.quantity,
-        status,
-        title: `Product #${item.prodID}`,
-      }));
+      grouped[status].push({
+        id: order.id,
+        items,
+        total_price: order.total_price,
+      });
     });
 
-    setGroupedItems({
-      new: allItems.filter((i) => i.status === "new"),
-      paid: allItems.filter((i) => i.status === "paid"),
-      delivered: allItems.filter((i) => i.status === "delivered"),
-    });
+    setGroupedOrders(grouped);
   };
 
   useFocusEffect(
@@ -107,82 +68,177 @@ export default function MyOrders() {
     }, [])
   );
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.details}>
-        <Text style={styles.title} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={styles.price}>Price: ${item.price}</Text>
-        <View style={styles.quantityRow}>
-          <Text style={styles.quantityText}>Quantity: {item.quantity}</Text>
+  const handleMarkAllAsPaid = async () => {
+    const user = await checkAuthStatus();
+    await Promise.all(
+      groupedOrders.new.map((order) =>
+        updateOrder(user.token, {
+          orderID: order.id,
+          isPaid: 1,
+          isDelivered: 0,
+        })
+      )
+    );
+    dispatch(markAllAsPaid());
+    setExpanded((prev) => ({ ...prev, paid: true }));
+    fetchOrders();
+  };
+
+  const handleMarkAllDelivered = async () => {
+    const user = await checkAuthStatus();
+    await Promise.all(
+      groupedOrders.paid.map((order) =>
+        updateOrder(user.token, {
+          orderID: order.id,
+          isPaid: 0,
+          isDelivered: 1,
+        })
+      )
+    );
+    dispatch(markAllAsDelivered());
+    setExpanded((prev) => ({ ...prev, paid: false, delivered: true }));
+    fetchOrders();
+  };
+
+  const renderOrderItem = ({ item }) => {
+    const product = item.productInfo;
+
+    return (
+      <View style={styles.itemCard}>
+      {product ? (
+        <View style={styles.itemRow}>
+          <Image source={{ uri: product.image }} style={styles.image} />
+
+          <View style={styles.itemDetails}>
+            <Text style={styles.titleText} numberOfLines={2}>
+              {product.title}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Price:</Text> ${item.price}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Quantity:</Text> {item.quantity}
+            </Text>
+          </View>
         </View>
-      </View>
+      ) : (
+        <Text style={styles.itemText}>Loading product info...</Text>
+      )}
     </View>
-  );
+    );
+  };
+
+  const renderOrderCard = (order) => {
+    const isOpen = orderExpanded[order.id];
+    const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+    const total = (order.total_price / 100).toFixed(2);
+
+    return (
+      <View key={order.id} style={styles.orderCard}>
+        <TouchableOpacity
+          style={styles.orderHeader}
+          onPress={async () => {
+            const isNowOpen = !orderExpanded[order.id];
+
+            setOrderExpanded((prev) => ({
+              ...prev,
+              [order.id]: isNowOpen,
+            }));
+
+            if (isNowOpen && !orderDetails[order.id]) {
+              const fetchedItems = await Promise.all(
+                order.items.map(async (item) => {
+                  try {
+                    const res = await fetch(
+                      `https://fakestoreapi.com/products/${item.prodID}`
+                    );
+                    const data = await res.json();
+                    return { ...item, productInfo: data };
+                  } catch (err) {
+                    console.error("Error fetching product:", item.prodID, err);
+                    return { ...item, productInfo: null };
+                  }
+                })
+              );
+
+              setOrderDetails((prev) => ({
+                ...prev,
+                [order.id]: fetchedItems,
+              }));
+            }
+          }}
+        >
+          <View>
+            <Text style={styles.orderId}>Order ID: {order.id}</Text>
+            <Text style={styles.orderSummary}>
+              Items: {itemCount} | Total: ${total}
+            </Text>
+          </View>
+          <FontAwesome name={isOpen ? "angle-up" : "angle-down"} size={20} />
+        </TouchableOpacity>
+
+        {isOpen && (
+          <FlatList
+            data={orderDetails[order.id] || []}
+            keyExtractor={(item, idx) => `${order.id}-${item.prodID}-${idx}`}
+            renderItem={renderOrderItem}
+          />
+        )}
+      </View>
+    );
+  };
 
   const renderGroup = (status) => {
-    const items = groupedItems[status];
-    const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-    const total = items
-      .reduce((sum, i) => sum + i.price * i.quantity, 0)
-      .toFixed(2);
+    const orders = groupedOrders[status];
 
     return (
       <View style={styles.group} key={status}>
-        <View style={styles.groupHeaderRow}>
-          <TouchableOpacity
-            style={styles.groupHeader}
-            onPress={() =>
-              setExpanded((prev) => ({ ...prev, [status]: !prev[status] }))
-            }
-          >
-            <Text style={styles.groupTitle}>
-              {STATUS_LABELS[status]}: {items.length}
-            </Text>
-            <Text style={styles.groupSummary}>
-              Items: {itemCount} Total: ${total}
-            </Text>
-            <FontAwesome
-              name={expanded[status] ? "angle-up" : "angle-down"}
-              size={24}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {expanded[status] && items.length > 0 && (
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderItem}
+        <TouchableOpacity
+          style={styles.groupHeader}
+          onPress={() =>
+            setExpanded((prev) => ({ ...prev, [status]: !prev[status] }))
+          }
+        >
+          <Text style={styles.groupTitle}>
+            {STATUS_LABELS[status]}: {orders.length}
+          </Text>
+          <FontAwesome
+            name={expanded[status] ? "chevron-up" : "chevron-down"}
+            size={18}
           />
-        )}
+        </TouchableOpacity>
 
-        {status === "new" && items.length > 0 && (
-          <TouchableOpacity
-            style={styles.payButton}
-            onPress={handleMarkAllAsPaid}
-          >
-            <Text style={styles.payButtonText}>Mark All as Paid</Text>
-          </TouchableOpacity>
-        )}
-        {status === "paid" && items.length > 0 && (
-          <TouchableOpacity
-            style={styles.payButton}
-            onPress={handleMarkAllDelivered}
-          >
-            <Text style={styles.payButtonText}>Mark All as Delivered</Text>
-          </TouchableOpacity>
+        {expanded[status] && (
+          <>
+            {orders.map(renderOrderCard)}
+
+            {status === "new" && orders.length > 0 && (
+              <TouchableOpacity
+                style={styles.payButton}
+                onPress={handleMarkAllAsPaid}
+              >
+                <Text style={styles.payButtonText}>Mark All as Paid</Text>
+              </TouchableOpacity>
+            )}
+            {status === "paid" && orders.length > 0 && (
+              <TouchableOpacity
+                style={styles.payButton}
+                onPress={handleMarkAllDelivered}
+              >
+                <Text style={styles.payButtonText}>Mark All as Delivered</Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.header}>My Orders</Text>
       {["new", "paid", "delivered"].map(renderGroup)}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -191,7 +247,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#f0f0f0",
   },
   header: {
     fontSize: 24,
@@ -200,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: "#42a5f5",
     color: "#fff",
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 10,
   },
   group: {
@@ -208,72 +264,101 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#90caf9",
     borderRadius: 10,
-    padding: 5,
-  },
-  groupHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: "#e3f2fd",
+    paddingBottom: 10,
   },
   groupHeader: {
     flexDirection: "row",
-    flex: 1,
     justifyContent: "space-between",
     alignItems: "center",
+    padding: 12,
     backgroundColor: "#bbdefb",
-    padding: 10,
-    borderRadius: 8,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   groupTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#0d47a1",
   },
-  groupSummary: {
+  orderCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 10,
+    marginVertical: 5,
+    padding: 10,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  orderId: {
+    fontWeight: "bold",
     fontSize: 14,
-    color: "#333",
+  },
+  orderSummary: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 2,
+  },
+  itemCard: {
+    backgroundColor: "#f9f9f9",
+    padding: 8,
+    marginTop: 6,
+    borderRadius: 6,
+    borderColor: "#ddd",
+    borderWidth: 1,
+  },
+  itemText: {
+    fontSize: 13,
   },
   payButton: {
-    marginLeft: 10,
+    marginTop: 10,
+    marginHorizontal: 10,
     backgroundColor: "#4caf50",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 6,
-    marginTop: 8,
-    alignSelf: "flex-start",
+    alignItems: "center",
   },
   payButtonText: {
     color: "white",
     fontWeight: "bold",
     fontSize: 14,
   },
-  card: {
-    flexDirection: "row",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    marginVertical: 6,
-    padding: 10,
+  image: {
+    width: 80,
+  height: 80,
+  resizeMode: "contain",
+  borderRadius: 6,
+  marginRight: 10,
+  backgroundColor: "#fff",
   },
-  details: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  price: {
-    fontSize: 14,
-    color: "#2e7d32",
-    marginVertical: 2,
-  },
-  quantityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  quantityText: {
-    fontSize: 14,
-    marginHorizontal: 10,
-  },
+  itemRow: {
+  flexDirection: "row",
+  alignItems: "center",
+},
+
+itemDetails: {
+  flex: 1,
+  flexDirection: "column",
+  justifyContent: "space-between",
+},
+
+titleText: {
+  fontSize: 13,
+  fontWeight: "bold",
+  marginBottom: 6,
+  color: "#333",
+},
+
+detailText: {
+  fontSize: 12,
+  marginBottom: 2,
+},
+
+boldText: {
+  fontWeight: "bold",
+},
 });

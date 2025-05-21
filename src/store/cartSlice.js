@@ -4,9 +4,6 @@ const cartSlice = createSlice({
   name: "cart",
   initialState: [],
   reducers: {
-    setCart: (state, action) => {
-      return action.payload;
-    },
     addToCart: (state, action) => {
       const item = state.find((i) => i.id === action.payload.id);
       if (item) {
@@ -17,27 +14,23 @@ const cartSlice = createSlice({
     },
     updateQuantity: (state, action) => {
       const { id, delta } = action.payload;
-      const index = state.findIndex((item) => item.id === id);
-      if (index !== -1) {
-        state[index].quantity += delta;
-        if (state[index].quantity <= 0) {
-          state.splice(index, 1);
+      const item = state.find((i) => i.id === id);
+      if (item) {
+        const newQty = item.quantity + delta;
+        if (newQty <= 0) {
+          return state.filter((i) => i.id !== id); // remove item if qty goes to 0
         }
+        item.quantity = newQty;
       }
     },
-    clearCart: () => [],
-    checkoutCart: (state) => {
-      const paidItems = state
-        .filter((item) => item.status === "new")
-        .map((item) => ({ ...item, status: "paid" }));
-
-      const remainingItems = state.filter((item) => item.status !== "new");
-
-      return [...remainingItems, ...paidItems];
+    setCart: (_, action) => {
+      return action.payload;
     },
+    clearCart: () => [],
   },
 });
 
-export const { addToCart, updateQuantity, clearCart, checkoutCart, setCart } =
+export const { addToCart, updateQuantity, setCart, clearCart } =
   cartSlice.actions;
+
 export default cartSlice.reducer;

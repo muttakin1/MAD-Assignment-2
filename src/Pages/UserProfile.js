@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { checkAuthStatus, signout } from "../api/Api";
 import { useDispatch } from "react-redux";
 import { CommonActions,useFocusEffect } from "@react-navigation/native";
+import { clearCart } from "../store/cartSlice";
 
 export default function UserProfile({ route, navigation }) {
   const dispatch = useDispatch();
@@ -24,6 +25,8 @@ export default function UserProfile({ route, navigation }) {
 );
 
   const handleSignout = async () => {
+    dispatch(clearCart());
+
     await signout(dispatch);
     navigation.dispatch(
       CommonActions.reset({

@@ -9,44 +9,61 @@ import {
   TouchableOpacity,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome6";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../store/cartSlice";
-import { syncCartItem,checkAuthStatus } from '../api/Api';
-
+import { syncCartItem, checkAuthStatus } from "../api/Api";
 
 export default function ProductDetail({ route, navigation }) {
   const dispatch = useDispatch();
-
-  const handleAddToCart = async () => {
-  dispatch(addToCart(product)); 
-
-  const user = await checkAuthStatus(); 
-  const token = user?.token;
-
-  if (!token) {
-    console.warn("User not logged in, cannot sync with backend");
-    return;
-  }
-
-  const cart = store.getState().cart; 
-  const cartItem = cart.find((item) => item.id === product.id);
-
-  const payload = {
-    items: [
-      {
-        id: product.id,
-        price: product.price,
-        count: cartItem ? cartItem.quantity : 1, 
-      },
-    ],
-  };
-
-  await syncCartItem(token, payload);
-};
+  const cart = useSelector((state) => state.cart);
 
   const { id } = route.params;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleAddToCart = async () => {
+  // Optimistically update Redux
+  dispatch(addToCart(product));
+
+  // Build updated cart manually
+  const updatedCart = [...cart];
+  const index = updatedCart.findIndex((item) => item.id === product.id);
+
+  if (index > -1) {
+    // Already exists in cart — increment quantity
+    const updatedItem = { ...updatedCart[index] };
+    updatedItem.quantity += 1;
+    updatedCart[index] = updatedItem;
+  } else {
+    // Not in cart yet
+    updatedCart.push({ ...product, quantity: 1 });
+  }
+
+  const payload = {
+    items: updatedCart.map((item) => ({
+      id: item.id,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+  };
+
+  try {
+    const user = await checkAuthStatus();
+    const token = user?.token;
+
+    if (!token) {
+      console.log("User not logged in, cannot sync with backend");
+      return;
+    }
+
+    console.log("Syncing cart:", JSON.stringify(payload, null, 2));
+    await syncCartItem(token, payload);
+    console.log("Cart synced successfully.");
+  } catch (err) {
+    console.error("Error syncing cart:", err);
+  }
+};
+
 
   useEffect(() => {
     fetch(`https://fakestoreapi.com/products/${id}`)
@@ -98,6 +115,7 @@ export default function ProductDetail({ route, navigation }) {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -109,7 +127,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   productImage: {
     width: 200,
     height: 200,

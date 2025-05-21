@@ -161,6 +161,7 @@ const getCartItems = async (token, product) => {
 };
 
 const syncCartItem = async (token, product) => {
+  
   try {
     const response = await fetch(`${URL}/cart`, {
       method: "Put",
