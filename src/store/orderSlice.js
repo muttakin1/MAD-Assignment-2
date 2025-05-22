@@ -4,6 +4,9 @@ const ordersSlice = createSlice({
   name: "orders",
   initialState: [],
   reducers: {
+    setOrders: (state, action) => {
+      return Array.isArray(action.payload) ? action.payload : [];
+    },
     addOrder: (state, action) => {
       state.push(action.payload);
     },
@@ -35,6 +38,11 @@ const ordersSlice = createSlice({
   },
 });
 
-export const { addOrder, updateOrderStatus, markAllAsPaid,markAllAsDelivered  } =
-  ordersSlice.actions;
+export const {
+  setOrders,
+  addOrder,
+  updateOrderStatus,
+  markAllAsPaid,
+  markAllAsDelivered,
+} = ordersSlice.actions;
 export default ordersSlice.reducer;

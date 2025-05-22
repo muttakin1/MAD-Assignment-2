@@ -15,20 +15,33 @@ import { View, Text, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 import useSyncCart from "./src/Components/SyncCart";
+import useSyncOrders from "./src/Components/SyncOrders";
 
 const Tab = createBottomTabNavigator();
 
 function AppTabs() {
   useSyncCart();
+  useSyncOrders(); 
   const navigation = useNavigation();
   const cartItems = useSelector((state) => state.cart);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const orders = useSelector((state) => state.orders);
+  console.log("Redux orders:", orders);
   const newOrderCount = orders
-    .flat()
-    .filter((item) => item.status === "new")
-    .reduce((sum, item) => sum + item.quantity, 0);
+  .filter((order) => order.is_paid === 0 && order.is_delivered === 0)
+  .reduce((sum, order) => {
+    let items = [];
+    try {
+      items = JSON.parse(order.order_items); // Parse stringified array
+    } catch (e) {
+      console.error("Error parsing order_items", e);
+    }
+    const orderQuantity = items.reduce((s, i) => s + i.quantity, 0);
+    return sum + orderQuantity;
+  }, 0);
+  
+    
 
   return (
     <Tab.Navigator

@@ -59,6 +59,7 @@ export default function Cart() {
       if (!token) return;
 
       const backendCart = await getCartItems(token);
+      
       const items = backendCart?.items || [];
 
       // Fetch product details for each item in parallel
@@ -97,25 +98,38 @@ export default function Cart() {
   }, []);
 
   const handleQuantityChange = async (id, delta) => {
-    const item = cartItems.find((i) => i.id === id);
-    if (!item) return;
+  
+  const item = cartItems.find((i) => i.id === id);
+  if (!item) return;
 
-    const newQuantity = item.quantity + delta;
+  const newQuantity = item.quantity + delta;
+  if (newQuantity < 1) return; 
 
-    try {
-      const user = await checkAuthStatus();
-      const token = user?.token;
-      if (!token) return;
+  // Clone and update the whole cart
+  const updatedCart = cartItems.map((i) =>
+    i.id === id ? { ...i, quantity: newQuantity } : i
+  );
 
-      const result = await syncCartItem(token, {
-        items: [{ prodID: id, price: item.price, quantity: newQuantity }],
-      });
+  try {
+    const user = await checkAuthStatus();
+    const token = user?.token;
+    if (!token) return;
 
-      dispatch(updateQuantity({ id, delta }));
-    } catch (error) {
-      console.error("Failed to sync quantity with backend:", error);
-    }
-  };
+    const payload = {
+      items: updatedCart.map((item) => ({
+        id: item.id,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+    };
+
+    await syncCartItem(token, payload);
+    dispatch(updateQuantity({ id, delta }));
+  } catch (error) {
+    console.error("Failed to sync quantity with backend:", error);
+  }
+};
+
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
 
